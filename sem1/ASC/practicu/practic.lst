@@ -1,0 +1,89 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  global start        
+     4                                  
+     5                                  extern exit             
+     6                                  import exit msvcrt.dll    
+     7                                  
+     8                                  extern scanf
+     9                                  import scanf msvcrt.dll
+    10                                  
+    11                                  extern fopen
+    12                                  import fopen msvcrt.dll
+    13                                  
+    14                                  
+    15                                  extern printf 
+    16                                  import printf msvcrt.dll
+    17                                  
+    18                                  
+    19                                  extern fprintf 
+    20                                  import fprintf msvcrt.dll
+    21                                  
+    22                                  
+    23                                    
+    24                                  segment data use32 class=data
+    25                                      
+    26 00000000 7700                    write_mode db "w",0
+    27                                  
+    28 00000002 <res 00000068>          file_name resb 104
+    29 0000006A 00000000                file_descr dd 0
+    30                                  
+    31 0000006E 66696C652064657363-     hexa_format db "file descriptor: %x",0
+    31 00000077 726970746F723A2025-
+    31 00000080 7800               
+    32 00000082 25642000                int_format db "%d ", 0
+    33 00000086 257300                  str_format db "%s",0
+    34                                  
+    35                                  segment code use32 class=code
+    36                                      start:
+    37                                          ; Sa se deschida fisierul si sa se printeze pe ecran descriptorul de fisier in baza 16 iar apoi sa se scrie cifrele impare (in baza 10) din descriptorul de fisier in fisierul creat.    
+    38                                          
+    39 00000000 68[02000000]                    push file_name
+    40 00000005 68[86000000]                    push str_format
+    41 0000000A FF15[00000000]                  call [scanf]; scanf %s str 
+    42 00000010 83C408                          add esp, 4*2
+    43                                          
+    44 00000013 68[00000000]                    push write_mode 
+    45 00000018 68[02000000]                    push file_name
+    46 0000001D FF15[00000000]                  call [fopen] ; fopen(name, mode )
+    47 00000023 83C408                          add esp, 4*2
+    48                                          
+    49 00000026 A3[6A000000]                    mov [file_descr], eax
+    50                                          
+    51                                          
+    52 0000002B 68[6A000000]                    push file_descr
+    53 00000030 68[6E000000]                    push hexa_format
+    54 00000035 FF15[00000000]                  call [printf]
+    55                                          
+    56                                          ;; revolza cifrele
+    57                                          
+    58                                          
+    59                                          
+    60 0000003B A1[6A000000]                    mov eax, [file_descr]
+    61                                  
+    62                                          .loop:
+    63                                              
+    64 00000040 BB0A000000                          mov ebx, 10
+    65 00000045 BA00000000                          mov edx, 0
+    66 0000004A F7F3                                div dword ebx
+    67                                              
+    68 0000004C BB01000000                          mov ebx, 1
+    69 00000051 21D3                                and ebx, edx
+    70 00000053 7417                                jz .even            
+    71 00000055 50                                      push eax
+    72                                                  
+    73 00000056 52                                      push edx
+    74 00000057 68[82000000]                            push int_format
+    75 0000005C FF35[6A000000]                          push dword [file_descr]
+    76 00000062 FF15[00000000]                          call [fprintf]
+    77 00000068 83C40C                                  add esp, 4*3
+    78                                                  
+    79 0000006B 58                                      pop eax
+    80                                              .even:
+    81                                              
+    82 0000006C 83F800                              cmp eax, 0
+    83 0000006F 75CF                                jnz .loop
+    84                                          
+    85                                          ; exit(0)
+    86 00000071 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    87 00000073 FF15[00000000]                  call    [exit]       ; call exit to terminate the program

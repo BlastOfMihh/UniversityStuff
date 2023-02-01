@@ -1,0 +1,98 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     4                                  global start        
+     5                                  
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit, fopen, printf, fprintf, scanf               ; tell nasm that exit exists even if we won't be defining it
+     8                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+     9                                  import fopen msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+    10                                  import printf msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+    11                                  import fprintf msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+    12                                  import scanf msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+    13                                                            ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    14                                  
+    15                                  ; our data is declared here (the variables needed by our program)
+    16                                  segment data use32 class=data
+    17                                      ; ...
+    18                                  
+    19 00000000 66696C652E6F757400      file_name db "file.out", 0
+    20 00000009 7700                    format db "w", 0
+    21                                  
+    22 0000000B 7465737400              test_str db "test",0
+    23                                  
+    24 00000010 5C6E                    backslash_str db "\n"
+    25                                  
+    26 00000012 FFFFFFFF                file_prt dd -1
+    27                                  
+    28 00000016 2573000000000000        scanf_format dd "%s", 0
+    29 0000001E FFFFFFFF                read_word dd -1
+    30                                  
+    31 00000022 00                      print_it db 0
+    32                                  
+    33 00000023 257300                  precentS db "%s",0
+    34                                  
+    35                                      
+    36                                  ; our code starts here
+    37                                  segment code use32 class=code
+    38                                      start:
+    39                                          ; ...
+    40                                  
+    41 00000000 68[09000000]                    push dword format 
+    42 00000005 68[00000000]                    push dword file_name 
+    43 0000000A FF15[00000000]                  call [fopen]
+    44 00000010 83C408                          add esp, 4*2
+    45 00000013 A3[12000000]                    mov [file_prt], eax
+    46                                          
+    47                                          .loop:
+    48 00000018 B901000000                          mov ecx, 1
+    49                                              
+    50                                              ;scanf
+    51 0000001D 68[1E000000]                        push read_word
+    52 00000022 68[16000000]                        push scanf_format
+    53 00000027 FF15[00000000]                      call [scanf]
+    54 0000002D 83C408                              add esp, 4*2
+    55                                              ; check if we have "$" inside read_word
+    56                                              
+    57 00000030 803D[1E000000]24                    cmp byte [read_word], "$"
+    58 00000037 744B                                je .exit_loop
+    59                                              
+    60                                              
+    61                                              ; check if we have an uppercase inside read_word
+    62                                              ;pushad
+    63 00000039 B920000000                          mov ecx, 32 
+    64 0000003E BE[1E000000]                        mov esi, read_word
+    65                                              .loop2:
+    66 00000043 803E00                                  cmp [esi], byte 0
+    67 00000046 7408                                    je .exit_loop2
+    68 00000048 803E5A                                  cmp [esi], byte 'Z'
+    69 0000004B 7E0C                                    jle .is_uppercase
+    70 0000004D 46                                      inc esi 
+    71 0000004E E2F3                                loop .loop2
+    72                                              .exit_loop2:
+    73                                              
+    74 00000050 C605[22000000]00                    mov [print_it], byte 0
+    75 00000057 EB07                                jmp .not_uppercase
+    76                                              .is_uppercase:
+    77 00000059 C605[22000000]01                        mov [print_it], byte 1
+    78                                              .not_uppercase:
+    79                                              ;popad
+    80                                              
+    81 00000060 803D[22000000]01                    cmp [print_it], byte 1
+    82 00000067 7519                                jne .dont_print
+    83                                                  ; fprintf
+    84                                                  
+    85 00000069 68[1E000000]                            push dword read_word 
+    86 0000006E 68[23000000]                            push dword precentS
+    87 00000073 FF35[12000000]                          push dword [file_prt]
+    88 00000079 FF15[00000000]                          call [fprintf]
+    89 0000007F 83C40C                                  add esp, 4*3
+    90                                              .dont_print:
+    91 00000082 E294                            loop .loop
+    92                                          
+    93                                          .exit_loop :
+    94                                          
+    95                                          
+    96                                          ; exit(0)
+    97 00000084 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    98 00000086 FF15[00000000]                  call    [exit]       ; call exit to terminate the program

@@ -1,0 +1,185 @@
+     1                                  bits 32
+     2                                  
+     3                                  global start        
+     4                                  
+     5                                  extern exit, fscanf , printf, fopen
+     6                                  import exit msvcrt.dll
+     7                                  import fscanf msvcrt.dll
+     8                                  import printf msvcrt.dll
+     9                                  import fopen msvcrt.dll
+    10                                  
+    11                                  segment data use32 class=data
+    12 00000000 7200                    read_mode db "r",0
+    13 00000002 6E756D626572732E74-     file_name db "numbers.txt", 0
+    13 0000000B 787400             
+    14 0000000E 00000000                file_ptr dd 0
+    15 00000012 25642000                int_format db "%d ", 0
+    16 00000016 00000000                nr dd 0
+    17                                  
+    18 0000001A 00000000<rept>          s times 26 dd 0
+    19 00000082 00000000                slen dd 0
+    20                                  
+    21 00000086 00000000<rept>          p times 26 dd 0
+    22 000000EE 00000000                plen dd 0
+    23 000000F2 00000000<rept>          n times 26 dd 0
+    24 0000015A 00000000                nlen dd 0
+    25                                  
+    26 0000015E 20202000                tab db "   ", 0
+    27                                  
+    28                                  
+    29                                  segment code use32 class=code
+    30                                      
+    31                                      open_file:
+    32 00000000 68[00000000]                    push read_mode
+    33 00000005 68[02000000]                    push file_name
+    34 0000000A FF15[00000000]                  call [fopen]
+    35 00000010 83C408                          add esp, 4*2
+    36 00000013 A3[0E000000]                    mov [file_ptr], eax
+    37 00000018 C3                              ret 
+    38                                  
+    39                                      read:
+    40 00000019 BB00000000                      mov ebx, 0
+    41 0000001E BE[1A000000]                    mov esi, s
+    42                                          .loop:
+    43 00000023 68[16000000]                        push nr
+    44 00000028 68[12000000]                        push int_format
+    45 0000002D FF35[0E000000]                      push dword [file_ptr]
+    46 00000033 FF15[00000000]                      call [fscanf]
+    47 00000039 83C40C                              add esp, 4*3
+    48 0000003C 50                                  push eax
+    49                                              ; push dword [nr]
+    50                                              ; push int_format
+    51                                              ; call [printf]
+    52                                              ; add esp, 4*2
+    53 0000003D 8305[82000000]01                    add dword [slen], 1
+    54                                  
+    55 00000044 8B15[16000000]                      mov edx, [nr]
+    56 0000004A 89149E                              mov [esi+ebx*4], edx
+    57 0000004D 43                                  inc ebx
+    58                                  
+    59                                  
+    60 0000004E 58                                  pop eax
+    61 0000004F 83F800                              cmp eax, 0
+    62 00000052 7FCF                            jg .loop
+    63 00000054 FF0D[82000000]                  dec dword [slen]
+    64 0000005A C3                              ret
+    65                                      
+    66                                      check_even:
+    67 0000005B 8B442404                      mov eax, [esp+4]
+    68 0000005F 83E001                        and eax, 1
+    69 00000062 C3                            ret 
+    70                                      
+    71                                      print_tab:
+    72 00000063 68[5E010000]                  push tab
+    73 00000068 FF15[00000000]                call [printf]
+    74 0000006E 83C404                        add esp, 4*1
+    75 00000071 C3                            ret 
+    76                                  
+    77                                      print_arr:
+    78                                          ; push dword [plen]
+    79                                          ; push p
+    80 00000072 8B742404                      mov esi, [esp+1*4]
+    81 00000076 8B4C2408                      mov ecx, [esp+2*4]
+    82 0000007A 83F900                        cmp ecx, 0
+    83 0000007D 7417                          je .end_loop_pa
+    84                                        .loop_pa:
+    85 0000007F 51                              push ecx
+    86 00000080 FF36                            push dword [esi]
+    87 00000082 68[12000000]                    push int_format
+    88 00000087 FF15[00000000]                  call [printf]
+    89 0000008D 83C408                          add esp, 4*2
+    90 00000090 59                              pop ecx
+    91 00000091 83C604                          add esi, 4
+    92 00000094 E2E9                          loop .loop_pa
+    93                                        .end_loop_pa:
+    94                                  
+    95 00000096 C3                            ret 
+    96                                  
+    97                                      append_arr:
+    98                                        ; push dword [esi]
+    99                                        ; push dword plen
+   100                                        ; push p
+   101                                        ; call append_arr
+   102                                        ; add esp, 4*3
+   103 00000097 8B742404                      mov esi, [esp+4]
+   104 0000009B 8B542408                      mov edx, [esp+4*2]
+   105 0000009F 8B1A                          mov ebx, [edx]
+   106 000000A1 830201                        add dword [edx], 1
+   107 000000A4 8B44240C                      mov eax, [esp+4*3]
+   108 000000A8 89049E                        mov [esi+ebx*4], eax
+   109                                  
+   110 000000AB C3                            ret
+   111                                  
+   112                                      start:
+   113                                          ; 26
+   114                                          ; Read from file numbers.txt a string of numbers (odd and even). 
+   115                                          ; Build two strings using read numbers:
+   116                                          ; P – only with even numbers
+   117                                          ; N – only with odd numbers
+   118                                          ; Display the strings on the screen.
+   119                                          
+   120 000000AC E84FFFFFFF                      call open_file
+   121 000000B1 E863FFFFFF                      call read
+   122                                          
+   123 000000B6 BE[1A000000]                    mov esi, s 
+   124 000000BB 8B0D[82000000]                  mov ecx, [slen]
+   125                                  
+   126                                          .loop2:
+   127 000000C1 FF36                                push dword [esi]
+   128 000000C3 E893FFFFFF                          call check_even
+   129 000000C8 751A                                jnz .not_even
+   130                                                ;; even 
+   131                                                ; push ecx
+   132                                                ; push dword [esi]
+   133                                                ; push int_format
+   134                                                ; call [printf]
+   135                                                ; add esp, 4*2
+   136                                                ; pop ecx
+   137 000000CA 51                                    push ecx
+   138 000000CB 56                                    push esi 
+   139                                  
+   140 000000CC FF36                                  push dword [esi]
+   141 000000CE 68[EE000000]                          push dword plen
+   142 000000D3 68[86000000]                          push p
+   143 000000D8 E8BAFFFFFF                            call append_arr
+   144 000000DD 83C40C                                add esp, 4*3
+   145                                  
+   146 000000E0 5E                                    pop esi
+   147 000000E1 59                                    pop ecx
+   148 000000E2 EB18                                jmp .even
+   149                                              .not_even:
+   150 000000E4 51                                    push ecx
+   151 000000E5 56                                    push esi
+   152                                  
+   153 000000E6 FF36                                  push dword [esi]
+   154 000000E8 68[5A010000]                          push nlen
+   155 000000ED 68[F2000000]                          push n
+   156 000000F2 E8A0FFFFFF                            call append_arr
+   157 000000F7 83C40C                                add esp, 4*3
+   158                                  
+   159 000000FA 5E                                    pop esi
+   160 000000FB 59                                    pop ecx
+   161                                                  ;; unvevn stuff 
+   162                                              .even:
+   163 000000FC 83C604                              add esi, 4
+   164 000000FF E2C0                            loop .loop2
+   165                                          
+   166 00000101 FF35[EE000000]                  push dword [plen]
+   167 00000107 68[86000000]                    push p
+   168 0000010C E861FFFFFF                      call print_arr
+   169 00000111 83C408                          add esp, 2*4
+   170                                          
+   171 00000114 E84AFFFFFF                      call print_tab
+   172                                  
+   173 00000119 FF35[5A010000]                  push dword [nlen]
+   174 0000011F 68[F2000000]                    push dword n
+   175 00000124 E849FFFFFF                      call print_arr 
+   176 00000129 83C408                          add esp, 2*4
+   177                                  
+   178                                          ; push dword [slen]
+   179                                          ; push dword s
+   180                                          ; call print_arr 
+   181                                          ; add esp, 2*4
+   182                                          ;
+   183 0000012C 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+   184 0000012E FF15[00000000]                  call    [exit]       ; call exit to terminate the program

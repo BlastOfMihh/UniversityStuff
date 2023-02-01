@@ -1,0 +1,82 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     4                                  global start        
+     5                                  
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit               ; tell nasm that exit exists even if we won't be defining it
+     8                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+     9                                                            ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    10                                  
+    11                                  ; our data is declared here (the variables needed by our program)
+    12                                  segment data use32 class=data
+    13                                      ; ...
+    14                                      
+    15 00000000 08                          a db 8
+    16 00000001 1000                        b dw 16
+    17 00000003 20000000                    c dd 32
+    18 00000007 4000000000000000            d dq 64
+    19                                      
+    20                                      ;; a - byte, b - word, c - double word, d - qword 
+    21                                      
+    22                                  ; our code starts here
+    23                                  segment code use32 class=code
+    24                                      start:
+    25                                          ;; (c-d-a)+(b+b)-(c+a) 
+    26                                          ;; signed guys signed
+    27                                          
+    28                                          ;; convert c in quad word 
+    29 00000000 A1[03000000]                    mov EAX, [c]
+    30 00000005 99                              cdq
+    31 00000006 2B05[07000000]                  sub EAX, dword [d]
+    32 0000000C 1B15[0B000000]                  sbb EDX, dword [d+4]
+    33 00000012 89C3                            mov EBX, EAX
+    34 00000014 89D1                            mov ECX, EDX ; save in ECX,EBX=EDX,EAX
+    35                                          
+    36                                          
+    37 00000016 A0[00000000]                    mov AL, [a]
+    38 0000001B 6698                            cbw
+    39 0000001D 98                              cwde
+    40 0000001E 99                              cdq 
+    41                                          
+    42 0000001F 29C3                            sub EBX, EAX
+    43 00000021 19D1                            sbb ECX, EDX 
+    44                                          
+    45 00000023 B800000000                      mov EAX, 0
+    46 00000028 66A1[01000000]                  mov AX, [b]
+    47 0000002E 6699                            cwd 
+    48 00000030 89C2                            mov EDX, EAX
+    49 00000032 01D0                            add EAX, EDX
+    50 00000034 99                              cdq
+    51                                          
+    52 00000035 29C3                            sub EBX, EAX
+    53 00000037 19D1                            sbb ECX, EDX 
+    54                                          
+    55 00000039 8B15[03000000]                  mov EDX, [c]
+    56 0000003F A0[00000000]                    mov AL, [a]
+    57 00000044 6698                            cbw
+    58 00000046 6699                            cWd
+    59 00000048 01D0                            add EAX, EDX
+    60                                          ;mov EDX, 0
+    61 0000004A 99                              cdq
+    62 0000004B 83D200                          ADC EDX, 0
+    63                                          
+    64 0000004E 29C3                            sub EBX, EAX
+    65 00000050 19D1                            sbb ECX, EDX 
+    66                                          
+    67                                          
+    68                                          
+    69                                          ; exit(0)
+    70 00000052 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    71 00000054 FF15[00000000]                  call    [exit]       ; call exit to terminate the program
+    72                                  
+    73                                          
+    74                                          
+    75                                          
+    76                                          
+    77                                          
+    78                                          
+    79                                          
+    80                                          
+    81                                          
+    82                                          

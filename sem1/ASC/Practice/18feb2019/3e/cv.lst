@@ -1,0 +1,57 @@
+     1                                  bits 32
+     2                                  
+     3                                  global start
+     4                                  
+     5                                  extern exit, printf
+     6                                  import exit msvcrt.dll
+     7                                  import printf msvcrt.dll
+     8                                  
+     9                                  segment data use32 class=data
+    10                                  
+    11                                  
+    12                                  segment code use32 class=code
+    13                                  
+    14 00000000 FF                      b db 255
+    15 00000001 4D6968497348657265-     a db 'MihIsHere12345678',0
+    15 0000000A 313233343536373800 
+    16                                  
+    17                                  ; var2 dq 10
+    18                                  
+    19                                  start:
+    20 00000013 A1[01000000]                mov eax, [a]
+    21 00000018 68[01000000]                push dword a
+    22 0000001D FF15[00000000]              call [printf]
+    23 00000023 83C404                      add esp, 4
+    24                                      ; mov ax, -127
+    25                                      ; mov bl, -1
+    26                                      ; idiv bl
+    27                                  
+    28                                      ; jmp
+    29                                      ; mov byte [CS:0], 1
+    30                                  
+    31                                      ; mov byte FAR [var2], 1
+    32                                  
+    33                                  
+    34                                  
+    35                                  
+    36                                      ; mov al, 255
+    37                                      ; mov bl, 2
+    38                                      ; imul bl
+    39                                  
+    40                                      ; mov ax, 1000
+    41                                      ; mov bl, 2
+    42                                      ; idiv bl
+    43                                  
+    44                                      ; mov al, 10100001b
+    45                                      ; mov bl, 10100011b
+    46                                      ; add al, bl
+    47                                  
+    48                                      ; lea eax, [ebx*1+10+ebp]
+    49                                  
+    50                                      ; mov eax, 200
+    51                                      ; mov ebx, 254h
+    52                                      ; idiv bl
+    53                                  
+    54                                  
+    55 00000026 6A00                        push    dword 0
+    56 00000028 FF15[00000000]              call    [exit]

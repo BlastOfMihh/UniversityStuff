@@ -1,0 +1,16 @@
+     1                                  ;bits 32                         
+     2                                  ;segment code use32 public code
+     3                                  ;global is_even
+     4                                  
+     5                                  is_even: 
+     6 00000000 6658                        pop eax
+     7 00000002 6683E001                    and eax, 1
+     8 00000006 6683F800                    cmp eax, 0
+     9 0000000A 7408                        je .even
+    10 0000000C 66B800000000                    mov eax, 0
+    11 00000012 EB06                        jmp .uneven
+    12                                      .even:
+    13 00000014 66B801000000                    mov eax, 1
+    14                                      .uneven:
+    15 0000001A 6683C404                    add esp, 4
+    16 0000001E C20400                      ret 4

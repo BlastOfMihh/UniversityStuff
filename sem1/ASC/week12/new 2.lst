@@ -1,0 +1,134 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     4                                  global start        
+     5                                  
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit               ; tell nasm that exit exists even if we won't be defining it
+     8                                  import exit msvcrt.dll    ; tell nasm that exit exists even if we won't be defining it
+     9                                  extern fopen               ; tell nasm that exit exists even if we won't be defining it
+    10                                  import fopen msvcrt.dll    
+    11                                  extern fscanf
+    12                                  import fscanf msvcrt.dll  
+    13                                  extern fprintf
+    14                                  import fprintf msvcrt.dll                   
+    15                                  extern printf
+    16                                  import printf msvcrt.dll                   
+    17                                   
+    18                                   
+    19                                  ;extern is_even
+    20                                  %include "even.asm"
+     1                              <1> ;bits 32                         
+     2                              <1> ;segment code use32 public code
+     3                              <1> ;global is_even
+     4                              <1> 
+     5                              <1> is_even: 
+     6 00000000 58                  <1>     pop eax
+     7 00000001 83E001              <1>     and eax, 1
+     8 00000004 83F800              <1>     cmp eax, 0
+     9 00000007 7407                <1>     je .even
+    10 00000009 B800000000          <1>         mov eax, 0
+    11 0000000E EB05                <1>     jmp .uneven
+    12                              <1>     .even:
+    13 00000010 B801000000          <1>         mov eax, 1
+    14                              <1>     .uneven:
+    15 00000015 83C404              <1>     add esp, 4
+    16 00000018 C20400              <1>     ret 4
+    21                                   
+    22                                  ; our data is declared here (the variables needed by our program)
+    23                                  segment data use32 class=data
+    24                                      ; ...
+    25                                      
+    26 0000001B 0000                        file dw 0
+    27 0000001D 6E756D626572732E74-         file_name db "numbers.txt",0
+    27 00000026 787400             
+    28 00000029 256400                      int_format db "%d",0
+    29 0000002C 0000                        nr dw 0
+    30                                      
+    31 0000002E 0000                        plen dw 0
+    32 00000030 0000                        nlen dw 0
+    33                                      
+    34 00000032 <res 0000006D>              p resb 109
+    35 0000009F <res 0000006D>              n resb 109
+    36                                      
+    37 0000010C 6D69686E6561206973-         mihh db "mihnea is here"
+    37 00000115 2068657265         
+    38                                  
+    39                                  ; our code starts here
+    40                                  segment code use32 class=code
+    41                                      start:
+    42                                          ; ...
+    43                                          
+    44                                          ; 26
+    45                                          ;Read from file numbers.txt a string of numbers (odd and even). Build two strings using readen numbers:
+    46                                          ;P – only with even numbers
+    47                                          ;N – only with odd numbers
+    48                                          ;Display the strings on the screen.
+    49                                          
+    50 00000000 68[0C010000]                    push dword mihh
+    51 00000005 FF15[00000000]                  call [printf]
+    52                                          
+    53                                          
+    54 0000000B 68[1D000000]                    push dword file_name
+    55 00000010 FF15[00000000]                  call [fopen]
+    56 00000016 A3[1B000000]                    mov [file], eax
+    57 0000001B 83C404                          add esp, 4*1
+    58                                          
+    59                                          .loop:
+    60                                              ; fscanf file, "%d", var 
+    61 0000001E 68[2C000000]                        push dword nr 
+    62 00000023 68[29000000]                        push dword int_format
+    63 00000028 FF35[1B000000]                      push dword [file]
+    64 0000002E FF15[00000000]                      call [fscanf]
+    65 00000034 83C40C                              add esp, 4*3
+    66                                              
+    67                                              ; even, uneven
+    68 00000037 FF35[2C000000]                      push dword [nr]
+    69 0000003D FF15[00000000]                      call [is_even]
+    70 00000043 83C404                              add esp, 1*4
+    71                                              
+    72 00000046 83F800                              cmp eax, 0
+    73 00000049 741B                                jz .even
+    74 0000004B 8B0D[30000000]                          mov ecx, [nlen]
+    75 00000051 8305[30000000]01                        add dword [nlen], 1
+    76 00000058 8B15[2C000000]                          mov edx, [nr]
+    77 0000005E 8991[32000000]                          mov [p+ecx], edx 
+    78 00000064 EB0D                                jmp .uneven 
+    79                                              .even :
+    80                                                  ; pass 
+    81 00000066 8B0D[2E000000]                          mov ecx, [plen]
+    82 0000006C 8305[2E000000]01                        add dword [plen], 1
+    83                                              .uneven:
+    84 00000073 83F800                              cmp eax, 0
+    85                                          ;jle .loop
+    86                                          
+    87                                                  
+    88 00000076 8B0D[30000000]                  mov ecx, [nlen]
+    89 0000007C C781[9F000000]0000-             mov dword [n+ecx], 0
+    89 00000084 0000               
+    90                                          
+    91 00000086 8B0D[2E000000]                  mov ecx, [plen]
+    92 0000008C C781[32000000]0000-             mov dword [p+ecx], 0
+    92 00000094 0000               
+    93                                          
+    94 00000096 68[32000000]                    push dword p
+    95 0000009B FF15[00000000]                  call [printf]
+    96 000000A1 83C404                          add esp, 4
+    97                                          
+    98                                          ; exit(0)
+    99 000000A4 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+   100 000000A6 FF15[00000000]                  call    [exit]       ; call exit to terminate the program
+   101                                  
+   102                                          
+   103                                          
+   104                                          
+   105                                          
+   106                                          
+   107                                          
+   108                                          
+   109                                          
+   110                                          
+   111                                          
+   112                                          
+   113                                          
+   114                                          
