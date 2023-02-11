@@ -1,3 +1,3 @@
 # UniversityStuff
 
-The title 
+Programming-related practice for my years at Babes-Bolyai University's Computer Science.
